@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useWallet } from "@/context/WalletContext";
 import { pinContentToIPFS, pinJSONToIPFS, PostMetadata } from "@/services/pinata";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export function CreatePost() {
   const [title, setTitle] = useState('');
@@ -59,7 +59,7 @@ export function CreatePost() {
       const metadataHash = await pinJSONToIPFS(metadata);
       console.log('Post created with metadata hash:', metadataHash);
 
-      // Create a post object for local storage
+      // Create a post object
       const newPost = {
         id: Date.now(),
         creator: {
@@ -84,11 +84,28 @@ export function CreatePost() {
       // Save to localStorage
       const savedPosts = JSON.parse(localStorage.getItem('ethcast_posts') || '[]');
       localStorage.setItem('ethcast_posts', JSON.stringify([newPost, ...savedPosts]));
+      
+      // Save to JSON Server if available
+      try {
+        const response = await fetch('http://localhost:3001/posts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newPost),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Server error');
+        }
+      } catch (error) {
+        console.log('JSON Server might not be running:', error);
+        // Continue anyway since we've saved to localStorage
+      }
 
       toast({
         title: "Post created!",
         description: "Your post has been published successfully.",
-        variant: "default"
       });
 
       // Clear form

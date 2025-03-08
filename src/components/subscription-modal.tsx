@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useWallet } from "@/context/WalletContext";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export function SubscriptionModal({ creatorName = "Creator", creatorId = "1" }) {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -47,25 +47,49 @@ export function SubscriptionModal({ creatorName = "Creator", creatorId = "1" }) 
       // Simulate blockchain transaction
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Demo: store subscription in localStorage
-      const subscriptions = JSON.parse(localStorage.getItem('ethcast_subscriptions') || '[]');
-      subscriptions.push({
+      // Create subscription object
+      const subscription = {
+        id: Date.now(),
         creatorId,
         creatorName,
         subscriberWallet: walletAddress,
         email,
         timestamp: Date.now(),
         transactionHash: `0x${Math.random().toString(16).substring(2, 42)}`,
-      });
-      localStorage.setItem('ethcast_subscriptions', JSON.stringify(subscriptions));
+      };
+      
+      // Store in localStorage
+      const subscriptions = JSON.parse(localStorage.getItem('ethcast_subscriptions') || '[]');
+      localStorage.setItem('ethcast_subscriptions', JSON.stringify([...subscriptions, subscription]));
+      
+      // Store in JSON Server if available
+      try {
+        const response = await fetch('http://localhost:3001/subscriptions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(subscription),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Server error');
+        }
+      } catch (error) {
+        console.log('JSON Server might not be running:', error);
+        // Continue anyway since we've saved to localStorage
+      }
       
       toast({
         title: "Subscription successful!",
         description: `You are now subscribed to ${creatorName}`,
-        variant: "default",
       });
       
       setDialogOpen(false);
+      
+      // Force reload posts to update UI
+      window.dispatchEvent(new CustomEvent('post-created'));
+      
     } catch (error) {
       console.error('Error subscribing:', error);
       toast({

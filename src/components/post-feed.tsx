@@ -1,11 +1,14 @@
+"use client"
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Repeat, Share, Heart } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import axios from 'axios';
 import Image from "next/image";
+import { useWallet } from "@/context/WalletContext";
+import { SubscriptionModal } from "@/components/subscription-modal";
 
 type PostType = "preview" | "full";
 
@@ -37,23 +40,66 @@ export function PostFeed() {
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [isLiked, setIsLiked] = useState<Record<number, boolean>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const { connected, walletAddress } = useWallet();
 
-  // Load posts from localStorage
-  const loadLocalPosts = () => {
+  // Check if user is subscribed to a creator
+  const isUserSubscribed = (creatorId: number) => {
     try {
-      const savedPosts = JSON.parse(localStorage.getItem('ethcast_posts') || '[]');
-      setPosts(savedPosts);
+      const subscriptions = JSON.parse(localStorage.getItem('ethcast_subscriptions') || '[]');
+      return connected && subscriptions.some(
+        (sub: any) => sub.creatorId === creatorId.toString() && sub.subscriberWallet === walletAddress
+      );
     } catch (error) {
-      console.error('Error loading posts from localStorage:', error);
+      console.error('Error checking subscription:', error);
+      return false;
+    }
+  };
+
+  // Load posts from both localStorage and server
+  const loadPosts = async () => {
+    setIsLoading(true);
+    try {
+      // Load from localStorage first for immediate display
+      const localPosts = JSON.parse(localStorage.getItem('ethcast_posts') || '[]');
+      setPosts(localPosts);
+
+      // Then try to load from JSON server 
+      try {
+        const response = await fetch('http://localhost:3001/posts');
+        if (response.ok) {
+          const serverPosts = await response.json();
+          // Merge local and server posts, removing duplicates by ID
+          const allPostIds = new Set();
+          const mergedPosts = [...localPosts];
+          
+          serverPosts.forEach((serverPost: Post) => {
+            if (!allPostIds.has(serverPost.id)) {
+              allPostIds.add(serverPost.id);
+              // Only add server posts that don't exist locally
+              if (!localPosts.some((localPost: Post) => localPost.id === serverPost.id)) {
+                mergedPosts.push(serverPost);
+              }
+            }
+          });
+          
+          setPosts(mergedPosts);
+        }
+      } catch (error) {
+        console.log('JSON Server might not be running:', error);
+      }
+    } catch (error) {
+      console.error('Error loading posts:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadLocalPosts();
+    loadPosts();
     
     // Listen for new posts
     const handleNewPost = () => {
-      loadLocalPosts();
+      loadPosts();
     };
     
     window.addEventListener('post-created', handleNewPost);
@@ -63,25 +109,48 @@ export function PostFeed() {
     };
   }, []);
 
-  const toggleLike = (postId: number) => {
-    setIsLiked((prev) => {
-      const newLikes = { ...prev, [postId]: !prev[postId] };
-      return newLikes;
-    });
+  // Also reload posts when wallet connection changes
+  useEffect(() => {
+    loadPosts();
+  }, [connected, walletAddress]);
+
+  const toggleLike = async (postId: number) => {
+    setIsLiked((prev) => ({
+      ...prev,
+      [postId]: !prev[postId],
+    }));
     
-    // Save liked state to localStorage
+    // Update post in state
     const updatedPosts = posts.map(post => {
       if (post.id === postId) {
-        return {
-          ...post,
-          likes: post.likes + (isLiked[postId] ? -1 : 1)
-        };
+        const updatedLikes = post.likes + (isLiked[postId] ? -1 : 1);
+        return { ...post, likes: updatedLikes };
       }
       return post;
     });
     
     setPosts(updatedPosts);
+    
+    // Save to localStorage
     localStorage.setItem('ethcast_posts', JSON.stringify(updatedPosts));
+    
+    // Update on server if possible
+    try {
+      const postToUpdate = updatedPosts.find(post => post.id === postId);
+      if (postToUpdate) {
+        await fetch(`http://localhost:3001/posts/${postId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            likes: postToUpdate.likes 
+          }),
+        });
+      }
+    } catch (error) {
+      console.log('Could not update like on server:', error);
+    }
   };
 
   // Sort by timestamp
@@ -145,27 +214,73 @@ export function PostFeed() {
                 </div>
 
                 <h3 className="font-semibold mt-1">{post.title}</h3>
-                <p className="mt-2">{post.content}</p>
 
-                {post.image && (
-                  <div className="mt-4">
-                    <Image
-                      src={post.image}
-                      alt="Post image"
-                      width={500}
-                      height={300}
-                      className="rounded-lg"
-                    />
-                  </div>
-                )}
-
-                {post.video && (
-                  <div className="mt-4">
-                    <video controls width="500" className="rounded-lg">
-                      <source src={post.video} type="video/mp4" />
-                      Your browser does not support the video tag.
-                    </video>
-                  </div>
+                {/* Content - check if preview and not subscribed */}
+                {post.type === "preview" && !isUserSubscribed(post.creator.id) ? (
+                  <>
+                    <div className="mt-2 relative">
+                      <p className="blur-md select-none">{post.content}</p>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-black/70 p-4 rounded-lg text-center">
+                          <p className="text-white mb-2">Subscribe to view full content</p>
+                          <SubscriptionModal 
+                            creatorName={post.creator.name} 
+                            creatorId={post.creator.id.toString()} 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Blur media for preview posts */}
+                    {post.image && (
+                      <div className="mt-4 relative">
+                        <div className="blur-md">
+                          <Image
+                            src={post.image}
+                            alt="Post image"
+                            width={500}
+                            height={300}
+                            className="rounded-lg"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {post.video && (
+                      <div className="mt-4 relative">
+                        <div className="blur-md">
+                          <video controls width="500" className="rounded-lg">
+                            <source src={post.video} type="video/mp4" />
+                            Your browser does not support the video tag.
+                          </video>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p className="mt-2">{post.content}</p>
+                    {post.image && (
+                      <div className="mt-4">
+                        <Image
+                          src={post.image}
+                          alt="Post image"
+                          width={500}
+                          height={300}
+                          className="rounded-lg"
+                        />
+                      </div>
+                    )}
+                    
+                    {post.video && (
+                      <div className="mt-4">
+                        <video controls width="500" className="rounded-lg">
+                          <source src={post.video} type="video/mp4" />
+                          Your browser does not support the video tag.
+                        </video>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <div className="flex justify-between mt-4">
