@@ -21,11 +21,11 @@ export default function Home() {
               transition={{ duration: 0.5, type: "spring" }}
             >
               <div className="h-8 w-8 rounded-full bg-gradient-to-br from-violet-600 to-cyan-500 flex items-center justify-center">
-                <span className="text-white font-bold">D</span>
+                <span className="text-white font-bold">S</span>
               </div>
             </motion.div>
             <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-cyan-500">
-              Decentra
+              SolCast
             </span>
           </Link>
           <WalletConnect />
