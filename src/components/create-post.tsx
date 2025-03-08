@@ -21,17 +21,26 @@ export function CreatePost() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!connected || !walletAddress) return;
+    if (!connected || !walletAddress || !title.trim() || !content.trim()) {
+      return; // Early return if required fields are empty
+    }
 
     try {
       setIsLoading(true);
 
-      // Pin content to IPFS
-      const contentHash = await pinContentToIPFS(content);
+      // Prepare post content including media
+      const postContent = {
+        title: title.trim(),
+        content: content.trim(),
+        media: selectedMedia,
+        mediaType,
+        type: postType
+      };
+      const contentHash = await pinContentToIPFS(JSON.stringify(postContent));
 
       // Create and pin metadata
       const metadata: PostMetadata = {
-        title,
+        title: title.trim(),
         author: walletAddress,
         walletAddress,
         timestamp: Date.now(),
