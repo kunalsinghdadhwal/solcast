@@ -11,8 +11,8 @@ import Image from "next/image"
 import solcastlogo from "/public/solcastlogo.png"
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-900/20 via-background to-cyan-900/20">
-      <div className="absolute inset-0 -z-10 h-full w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] opacity-25"></div>
+    <div className="min-h-screen bg-gradient-to-br from-[#1C1B1D]  to-[#DA1173]/20">
+      <div className="absolute inset-0 -z-10 h-full w-full bg-[radial-gradient(#e5e7eb_1.5px,transparent_1px)] [background-size:40px_40px] opacity-25"></div>
       <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
@@ -23,8 +23,8 @@ export default function Home() {
             >
               <Image src={solcastlogo} alt="SolCast Logo" width={40} height={40} />
             </motion.div>
-            <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-cyan-500">
-              SolCast
+            <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-[#60c2e0] to-[#e0c760]">
+              ETHCast
             </span>
           </Link>
           <WalletConnect />
@@ -33,7 +33,7 @@ export default function Home() {
       <main className="container grid grid-cols-1 md:grid-cols-3 gap-6 py-8">
         <div className="md:col-span-2">
           <motion.h1
-            className="text-3xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-cyan-500"
+            className="text-3xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-[#60c2e0] to-[#e0c760]"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -85,4 +85,3 @@ export default function Home() {
     </div>
   )
 }
-
