@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -24,6 +24,7 @@ type Post = {
   fullContent?: string
   type: PostType
   image?: string
+  video?: string
   likes: number
   comments: number
   reposts: number
@@ -113,6 +114,9 @@ export function PostFeed() {
   const [newPostContent, setNewPostContent] = useState("")
   const [isLiked, setIsLiked] = useState<Record<number, boolean>>({})
   const [postType, setPostType] = useState<PostType>("full")
+  const [selectedMedia, setSelectedMedia] = useState<string | null>(null)
+  const [mediaType, setMediaType] = useState<"image" | "video" | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleCreatePost = () => {
     if (!newPostContent.trim()) return
@@ -127,6 +131,8 @@ export function PostFeed() {
       },
       content: newPostContent,
       type: postType,
+      image: mediaType === "image" ? selectedMedia : undefined,
+      video: mediaType === "video" ? selectedMedia : undefined,
       likes: 0,
       comments: 0,
       reposts: 0,
@@ -136,6 +142,8 @@ export function PostFeed() {
 
     setPosts([newPost, ...posts])
     setNewPostContent("")
+    setSelectedMedia(null)
+    setMediaType(null)
   }
 
   const toggleLike = (postId: number) => {
@@ -148,6 +156,24 @@ export function PostFeed() {
   const togglePostType = () => {
     setPostType((prev) => (prev === "full" ? "preview" : "full"))
   }
+
+  const handleImageIconClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedMedia(reader.result as string);
+        setMediaType(file.type.startsWith("image") ? "image" : "video");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -163,15 +189,35 @@ export function PostFeed() {
           value={newPostContent}
           onChange={(e) => setNewPostContent(e.target.value)}
         />
+        {selectedMedia && (
+          <div className="mt-4">
+            {mediaType === "image" ? (
+              <Image src={selectedMedia} alt="Selected" width={500} height={300} className="rounded-lg" />
+            ) : (
+              <video controls width="500" className="rounded-lg">
+                <source src={selectedMedia} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            )}
+          </div>
+        )}
         <div className="flex justify-between items-center mt-4">
           <div className="flex gap-2 items-center">
             <Button
               variant="ghost"
               size="icon"
               className="rounded-full text-violet-500 hover:text-violet-600 hover:bg-violet-500/10"
+              onClick={handleImageIconClick}
             >
               <ImageIcon className="h-5 w-5" />
             </Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              accept="image/*,video/*"
+              onChange={handleFileChange}
+            />
             <Button
               variant="outline"
               size="sm"
@@ -279,7 +325,7 @@ export function PostFeed() {
                           alt="Post image"
                           width={500}
                           height={300}
-                          className="w-full object-cover hover:scale-[1.02] transition-transform duration-500 blur-[2px]"
+                          className="w-full object-cover hover:scale-[1.02] transition-transform duration-500 blur-[90px]"
                         />
                         <div className="absolute bottom-0 left-0 right-0 p-4 z-20">
                           <Button className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-0">
@@ -289,7 +335,22 @@ export function PostFeed() {
                         </div>
                       </div>
                     )}
-                    {!post.image && post.fullContent && (
+                    {post.video && (
+                      <div className="mt-3 rounded-lg overflow-hidden relative">
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60 z-10"></div>
+                        <video controls width="500" className="rounded-lg blur-[40px]">
+                          <source src={post.video} type="video/mp4" />
+                          Your browser does not support the video tag.
+                        </video>
+                        <div className="absolute bottom-0 left-0 right-0 p-4 z-20">
+                          <Button className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-0">
+                            <Lock className="mr-2 h-4 w-4" />
+                            Subscribe to View Full Post
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    {!post.image && !post.video && post.fullContent && (
                       <div className="mt-4 p-4 rounded-lg bg-amber-500/5 border border-amber-500/20 relative">
                         <div className="absolute inset-0 backdrop-blur-[3px]"></div>
                         <div className="relative z-10 flex flex-col items-center justify-center gap-3 py-4">
@@ -314,6 +375,14 @@ export function PostFeed() {
                           height={300}
                           className="w-full object-cover hover:scale-[1.02] transition-transform duration-500"
                         />
+                      </div>
+                    )}
+                    {post.video && (
+                      <div className="mt-3 rounded-lg overflow-hidden">
+                        <video controls width="500" className="rounded-lg">
+                          <source src={post.video} type="video/mp4" />
+                          Your browser does not support the video tag.
+                        </video>
                       </div>
                     )}
                   </>
