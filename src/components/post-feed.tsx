@@ -177,18 +177,6 @@ export function PostFeed() {
 
   return (
     <div className="space-y-6">
-      <motion.div
-        className="rounded-xl border bg-card/80 backdrop-blur-sm p-4 shadow-lg shadow-violet-500/5"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Textarea
-          placeholder="What's happening?"
-          className="resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 bg-transparent text-lg"
-          value={newPostContent}
-          onChange={(e) => setNewPostContent(e.target.value)}
-        />
         {selectedMedia && (
           <div className="mt-4">
             {mediaType === "image" ? (
@@ -201,55 +189,7 @@ export function PostFeed() {
             )}
           </div>
         )}
-        <div className="flex justify-between items-center mt-4">
-          <div className="flex gap-2 items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full text-violet-500 hover:text-violet-600 hover:bg-violet-500/10"
-              onClick={handleImageIconClick}
-            >
-              <ImageIcon className="h-5 w-5" />
-            </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              style={{ display: "none" }}
-              accept="image/*,video/*"
-              onChange={handleFileChange}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={togglePostType}
-              className="rounded-full border-violet-500/20 flex gap-2 items-center"
-            >
-              {postType === "full" ? (
-                <>
-                  <Eye className="h-4 w-4 text-green-500" />
-                  <span>Full Post</span>
-                </>
-              ) : (
-                <>
-                  <Lock className="h-4 w-4 text-amber-500" />
-                  <span>Preview</span>
-                </>
-              )}
-            </Button>
-          </div>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
-              onClick={handleCreatePost}
-              disabled={!newPostContent.trim()}
-              className="relative overflow-hidden group bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-700 hover:to-cyan-600 text-white border-0"
-            >
-              <div className="absolute -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-40 group-hover:animate-shine" />
-              <Send className="mr-2 h-4 w-4" />
-              Post
-            </Button>
-          </motion.div>
-        </div>
-      </motion.div>
+        
 
       <AnimatePresence>
         {posts.map((post, index) => (
