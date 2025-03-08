@@ -1,13 +1,14 @@
 "use client"
-import { useState, useRef } from 'react';
-import { useWallet } from '@/context/WalletContext';
-import { pinContentToIPFS, pinJSONToIPFS, PostMetadata } from '@/services/pinata';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { ImageIcon, Send, Eye, Lock } from "lucide-react";
+
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
+import { Image, ImagePlus, VideoIcon, Lock, Unlock, Send } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { useWallet } from "@/context/WalletContext";
+import { pinContentToIPFS, pinJSONToIPFS, PostMetadata } from "@/services/pinata";
+import { useToast } from "@/components/ui/use-toast";
 
 export function CreatePost() {
   const [title, setTitle] = useState('');
@@ -18,11 +19,17 @@ export function CreatePost() {
   const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [postType, setPostType] = useState<"preview" | "full">("full");
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!connected || !walletAddress || !title.trim() || !content.trim()) {
-      return; // Early return if required fields are empty
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields and connect your wallet",
+        variant: "destructive"
+      });
+      return;
     }
 
     try {
@@ -36,6 +43,8 @@ export function CreatePost() {
         mediaType,
         type: postType
       };
+      
+      // Store in Pinata
       const contentHash = await pinContentToIPFS(JSON.stringify(postContent));
 
       // Create and pin metadata
@@ -48,16 +57,56 @@ export function CreatePost() {
       };
 
       const metadataHash = await pinJSONToIPFS(metadata);
+      console.log('Post created with metadata hash:', metadataHash);
 
-      // Here you would call your Solana program to store the metadataHash
-      // await program.methods.createPost(...)
+      // Create a post object for local storage
+      const newPost = {
+        id: Date.now(),
+        creator: {
+          id: Date.now(),
+          name: walletAddress.slice(0, 8),
+          handle: `@${walletAddress.slice(0, 6)}`,
+          avatar: "/placeholder.svg?height=40&width=40",
+        },
+        content: content.trim(),
+        title: title.trim(),
+        type: postType,
+        image: mediaType === "image" ? selectedMedia : undefined,
+        video: mediaType === "video" ? selectedMedia : undefined,
+        likes: 0,
+        comments: 0,
+        reposts: 0,
+        timestamp: new Date().toLocaleString(),
+        isSubscribed: true,
+        metadataHash
+      };
 
+      // Save to localStorage
+      const savedPosts = JSON.parse(localStorage.getItem('ethcast_posts') || '[]');
+      localStorage.setItem('ethcast_posts', JSON.stringify([newPost, ...savedPosts]));
+
+      toast({
+        title: "Post created!",
+        description: "Your post has been published successfully.",
+        variant: "default"
+      });
+
+      // Clear form
       setTitle('');
       setContent('');
       setSelectedMedia(null);
       setMediaType(null);
+      
+      // Force reload posts in the feed
+      window.dispatchEvent(new CustomEvent('post-created'));
+      
     } catch (error) {
       console.error('Error creating post:', error);
+      toast({
+        title: "Error creating post",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -98,62 +147,83 @@ export function CreatePost() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           disabled={!connected || isLoading}
+          className="border-0 focus-visible:ring-1 focus-visible:ring-violet-500 bg-background/50"
         />
+        
         <Textarea
           placeholder="What's on your mind?"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           disabled={!connected || isLoading}
-          className="min-h-[100px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 bg-transparent text-lg"
+          className="min-h-[100px] resize-none border-0 focus-visible:ring-1 focus-visible:ring-violet-500 bg-background/50 text-lg"
         />
+        
         {selectedMedia && (
-          <div className="mt-4">
+          <div className="mt-2">
             {mediaType === "image" ? (
-              <Image src={selectedMedia} alt="Selected" width={500} height={300} className="rounded-lg" />
+              <img src={selectedMedia} alt="Selected media" className="max-h-60 rounded-lg" />
             ) : (
-              <video controls width="500" className="rounded-lg">
-                <source src={selectedMedia} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
+              <video src={selectedMedia} controls className="max-h-60 rounded-lg" />
             )}
-          </div>
-        )}
-        <div className="flex justify-between items-center mt-4">
-          <div className="flex gap-2 items-center">
             <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full text-violet-500 hover:text-violet-600 hover:bg-violet-500/10"
-              onClick={handleImageIconClick}
-            >
-              <ImageIcon className="h-5 w-5" />
-            </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              style={{ display: "none" }}
-              accept="image/*,video/*"
-              onChange={handleFileChange}
-            />
-            <Button
+              type="button"
               variant="outline"
               size="sm"
+              className="mt-2"
+              onClick={() => {
+                setSelectedMedia(null);
+                setMediaType(null);
+              }}
+            >
+              Remove media
+            </Button>
+          </div>
+        )}
+        
+        <input
+          type="file"
+          accept="image/*,video/*"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+        />
+        
+        <div className="flex items-center justify-between">
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleImageIconClick}
+              disabled={isLoading || !connected}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <ImagePlus className="h-4 w-4 mr-1" />
+              Add Media
+            </Button>
+            
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               onClick={togglePostType}
-              className="rounded-full border-violet-500/20 flex gap-2 items-center"
+              disabled={isLoading || !connected}
+              className="text-muted-foreground hover:text-foreground"
             >
               {postType === "full" ? (
                 <>
-                  <Eye className="h-4 w-4 text-green-500" />
-                  <span>Full Post</span>
+                  <Unlock className="h-4 w-4 mr-1" />
+                  Public
                 </>
               ) : (
                 <>
-                  <Lock className="h-4 w-4 text-amber-500" />
-                  <span>Preview</span>
+                  <Lock className="h-4 w-4 mr-1" />
+                  Preview Only
                 </>
               )}
             </Button>
           </div>
+          
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               type="submit"

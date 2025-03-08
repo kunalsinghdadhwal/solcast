@@ -1,9 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Repeat, Share, Heart } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import axios from 'axios';
 import Image from "next/image";
@@ -19,6 +18,7 @@ type Post = {
     avatar: string;
   };
   content: string;
+  title: string;
   fullContent?: string;
   type: PostType;
   image?: string;
@@ -28,69 +28,64 @@ type Post = {
   reposts: number;
   timestamp: string;
   isSubscribed?: boolean;
+  metadataHash?: string;
 };
 
-const initialPosts: Post[] = []; // Empty initial posts array
+const initialPosts: Post[] = [];
 
 export function PostFeed() {
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [isLiked, setIsLiked] = useState<Record<number, boolean>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [ipfsPosts, setIpfsPosts] = useState<Post[]>([]);
 
-  const fetchIPFSContent = async (hash: string) => {
+  // Load posts from localStorage
+  const loadLocalPosts = () => {
     try {
-      const PINATA_GATEWAY = process.env.NEXT_PUBLIC_PINATA_GATEWAY || 'https://gateway.pinata.cloud';
-      const response = await axios.get(`${PINATA_GATEWAY}/ipfs/${hash}`);
-      return response.data;
+      const savedPosts = JSON.parse(localStorage.getItem('ethcast_posts') || '[]');
+      setPosts(savedPosts);
     } catch (error) {
-      console.error('Error fetching IPFS content:', error);
-      return null;
-    }
-  };
-
-  const fetchPosts = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Fetch posts from your backend/Solana program
-      // const postHashes = await yourBackendAPI.getPosts();
-      
-      // For each hash, fetch the content
-      // const postsData = await Promise.all(postHashes.map(async (hash) => {
-      //   const metadata = await fetchIPFSContent(hash);
-      //   if (!metadata) return null;
-      //   const content = await fetchIPFSContent(metadata.contentHash);
-      //   if (!content) return null;
-      //   return {
-      //     ...content,
-      //     metadata
-      //   };
-      // }));
-
-      // Filter out null values and set posts
-      // const validPosts = postsData.filter(post => post !== null);
-      // setIpfsPosts(validPosts);
-      
-    } catch (error) {
-      console.error('Error fetching posts:', error);
-    } finally {
-      setIsLoading(false);
+      console.error('Error loading posts from localStorage:', error);
     }
   };
 
   useEffect(() => {
-    fetchPosts();
+    loadLocalPosts();
+    
+    // Listen for new posts
+    const handleNewPost = () => {
+      loadLocalPosts();
+    };
+    
+    window.addEventListener('post-created', handleNewPost);
+    
+    return () => {
+      window.removeEventListener('post-created', handleNewPost);
+    };
   }, []);
 
   const toggleLike = (postId: number) => {
-    setIsLiked((prev) => ({
-      ...prev,
-      [postId]: !prev[postId],
-    }));
+    setIsLiked((prev) => {
+      const newLikes = { ...prev, [postId]: !prev[postId] };
+      return newLikes;
+    });
+    
+    // Save liked state to localStorage
+    const updatedPosts = posts.map(post => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          likes: post.likes + (isLiked[postId] ? -1 : 1)
+        };
+      }
+      return post;
+    });
+    
+    setPosts(updatedPosts);
+    localStorage.setItem('ethcast_posts', JSON.stringify(updatedPosts));
   };
 
-  const allPosts = [...ipfsPosts, ...posts].sort((a, b) => {
+  // Sort by timestamp
+  const sortedPosts = [...posts].sort((a, b) => {
     return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
   });
 
@@ -103,8 +98,14 @@ export function PostFeed() {
         </div>
       )}
 
+      {posts.length === 0 && !isLoading && (
+        <div className="text-center p-8 rounded-xl border bg-card/80 backdrop-blur-sm">
+          <p className="text-muted-foreground">No posts yet. Be the first to create one!</p>
+        </div>
+      )}
+
       <AnimatePresence>
-        {allPosts.map((post, index) => (
+        {sortedPosts.map((post, index) => (
           <motion.div
             key={post.id}
             initial={{ opacity: 0, y: 20 }}
@@ -143,6 +144,7 @@ export function PostFeed() {
                   <span className="text-muted-foreground text-sm">{post.timestamp}</span>
                 </div>
 
+                <h3 className="font-semibold mt-1">{post.title}</h3>
                 <p className="mt-2">{post.content}</p>
 
                 {post.image && (
