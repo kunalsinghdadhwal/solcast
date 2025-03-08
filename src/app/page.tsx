@@ -1,5 +1,5 @@
 "use client"
-
+import { CreatePost } from "@/components/create-post"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { WalletConnect } from "@/components/wallet-connect"
@@ -40,6 +40,7 @@ export default function Home() {
           >
             Your Feed
           </motion.h1>
+          <CreatePost />
           <PostFeed />
         </div>
         <motion.div
