@@ -437,12 +437,11 @@ pub struct Subscriber {
     pub has_already_been_initialized: bool,
     pub authority: Pubkey,
     pub subscriber_payment_account: Pubkey,
-    #[max_len(MAXIMUM_SUBSCRIPTIONS_PER_USER)]
-    pub subscription_accounts: Vec<Pubkey>,
+    pub subscription_accounts: [Pubkey; MAXIMUM_SUBSCRIPTIONS_PER_USER],
 }
 
 #[account]
-#[derive(InitSpace)]
+#[derive(InitSpace, SplDiscriminate)]
 pub struct Subscription {
     pub bump: u8,
     pub has_already_been_initialized: bool,
@@ -469,8 +468,7 @@ pub struct SubscriptionPlan {
     pub frequency: i64,
     pub is_active: bool,
     pub fee_percentage: i8,
-    #[max_len(MAXIMUM_SUBSCRIPTIONS_PER_PLAN)]
-    pub subscription_accounts: Vec<Pubkey>,
+    pub subscription_accounts: [Pubkey; MAXIMUM_SUBSCRIPTIONS_PER_PLAN],
 }
 
 #[account]
@@ -479,8 +477,7 @@ pub struct SubscriptionPlanAuthor {
     pub bump: u8,
     pub has_already_been_initialized: bool,
     pub authority: Pubkey,
-    #[max_len(MAXIMUM_SUBSCRIPTION_PLAN_PER_AUTHOR)]
-    pub subscription_plan_accounts: Vec<Pubkey>,
+    pub subscription_plan_accounts: [Pubkey; MAXIMUM_SUBSCRIPTION_PLAN_PER_AUTHOR],
 }
 
 #[account]
@@ -489,10 +486,8 @@ pub struct Protocol {
     pub bump: u8,
     pub has_already_been_initialized: bool,
     pub authority: Pubkey,
-    #[max_len(MAXIMUM_SUBSCRIPTION_PLANS)]
-    pub subscription_plan_accounts: Vec<Pubkey>,
-    #[max_len(MAXIMUM_NODES)]
-    pub registered_nodes: Vec<Pubkey>,
+    pub subscription_plan_accounts: [Pubkey; MAXIMUM_SUBSCRIPTION_PLANS],
+    pub registered_nodes: [Pubkey; MAXIMUM_NODES],
 }
 
 #[account]
@@ -518,8 +513,7 @@ pub struct Grantive {
     pub has_already_been_initialized: bool,
     pub authority: Pubkey,
 
-    #[max_len(MAXIMUM_CREATOR_ACCOUNTS)]
-    pub creator_accounts: Vec<Pubkey>,
+    pub creator_accounts: [Pubkey; MAXIMUM_CREATOR_ACCOUNTS],
 }
 
 #[account]
@@ -534,8 +528,7 @@ pub struct Creator {
     pub data_id: String,
     pub subscription_plan: Pubkey,
 
-    #[max_len(MAXIMUM_POSTS_PER_CREATOR)]
-    pub posts: Vec<Pubkey>,
+    pub posts: [Pubkey; MAXIMUM_POSTS_PER_CREATOR],
     pub last_post_index: i64,
 }
 
