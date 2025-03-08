@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Wallet, LogOut } from "lucide-react"
 import { useWallet } from "@/context/WalletContext"
-
+import Image from "next/image"
+import metamask from "/public/metamask.svg"
+import phantom from "/public/phantom.svg"
 export function WalletConnect() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const { connected, walletAddress, connectMetaMask, connectPhantom, disconnectWallet } = useWallet()
@@ -43,11 +45,11 @@ export function WalletConnect() {
           {!connected ? (
             <>
               <Button onClick={() => handleConnect('metamask')} variant="outline" className="flex items-center gap-2">
-                <img src="/metamask-logo.svg" alt="MetaMask" className="h-6 w-6" />
+              <Image src={metamask} alt="MetaMask Logo" width={40} height={40} />
                 Connect MetaMask
               </Button>
               <Button onClick={() => handleConnect('phantom')} variant="outline" className="flex items-center gap-2">
-                <img src="/phantom-logo.svg" alt="Phantom" className="h-6 w-6" />
+              <Image src={phantom} alt="phantom Logo" width={40} height={40} />
                 Connect Phantom
               </Button>
             </>

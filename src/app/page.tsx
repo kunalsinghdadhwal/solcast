@@ -7,7 +7,8 @@ import { PostFeed } from "@/components/post-feed"
 import { TrendingTopics } from "@/components/trending-topics"
 import { SubscribedCreators } from "@/components/subscribed-creators"
 import { motion } from "framer-motion"
-
+import Image from "next/image"
+import solcastlogo from "/public/solcastlogo.png"
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-900/20 via-background to-cyan-900/20">
@@ -20,9 +21,7 @@ export default function Home() {
               animate={{ rotate: 0, scale: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
             >
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-violet-600 to-cyan-500 flex items-center justify-center">
-                <span className="text-white font-bold">S</span>
-              </div>
+              <Image src={solcastlogo} alt="SolCast Logo" width={40} height={40} />
             </motion.div>
             <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-cyan-500">
               SolCast
