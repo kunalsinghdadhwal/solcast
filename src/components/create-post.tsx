@@ -178,9 +178,9 @@ export function CreatePost() {
         {selectedMedia && (
           <div className="mt-2">
             {mediaType === "image" ? (
-              <img src={selectedMedia} alt="Selected media" className="max-h-60 rounded-lg" />
+              <img src={selectedMedia} alt="Selected media" className="max-h-60 rounded-lg" style={{ width: 'auto', height: 'auto' }} />
             ) : (
-              <video src={selectedMedia} controls className="max-h-60 rounded-lg" />
+              <video src={selectedMedia} controls className="max-h-60 rounded-lg" style={{ width: 'auto', height: 'auto' }} />
             )}
             <Button
               type="button"
