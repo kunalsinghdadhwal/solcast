@@ -569,7 +569,7 @@ export const Web3Provider = ({ children, contractAddress }) => {
       // Initialize contract instance
       const contract = new web3Instance.eth.Contract(
         ContentPlatformABI,
-        contractAddress
+        0xF31AE64d9A256C6F141E7C29296D1011016b22Cc,
       );
 
       // Set up event listeners for MetaMask

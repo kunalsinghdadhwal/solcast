@@ -1,6 +1,5 @@
 "use client"
 
-<<<<<<< HEAD
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Repeat, Share, Heart } from "lucide-react";
@@ -10,7 +9,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useWallet } from "@/context/WalletContext";
 import { SubscriptionModal } from "@/components/subscription-modal";
-=======
 import { useState, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -20,14 +18,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Heart, MessageCircle, Repeat, Share, Send, ImageIcon, Lock, Eye } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
->>>>>>> ba81ab6 (added image and video uploading button)
 
 type PostType = "preview" | "full";
 
 type Post = {
   id: number;
   creator: {
-<<<<<<< HEAD
     id: number;
     name: string;
     handle: string;
@@ -46,7 +42,6 @@ type Post = {
   isSubscribed?: boolean;
   metadataHash?: string;
 };
-=======
     id: number
     name: string
     handle: string
@@ -63,7 +58,6 @@ type Post = {
   timestamp: string
   isSubscribed?: boolean
 }
->>>>>>> ba81ab6 (added image and video uploading button)
 
 const initialPosts: Post[] = [];
 
