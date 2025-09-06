@@ -2,7 +2,7 @@
 
 ## Overview
 
-SolCast is a decentralized content creation platform built on the Solana blockchain, designed to empower creators in the Web3 content creation space. Drawing inspiration from Web2 platforms like YouTube and Twitch, ETHcast enables creators to tokenize their content as NFTs, fostering direct audience engagement and monetization through Solana's high-performance blockchain. Utilizing Anchor for smart contract development, ETHcast ensures secure, transparent, and intermediary-free transactions, creating a dynamic ecosystem for Web3 creators and their audiences.
+SolCast is a decentralized content creation platform built on the Solana blockchain, designed to empower creators in the Web3 content creation space. Drawing inspiration from Web2 platforms like YouTube and Twitch, SolCast enables creators to tokenize their content as NFTs, fostering direct audience engagement and monetization through Solana's high-performance blockchain. Utilizing Anchor for smart contract development, SolCast ensures secure, transparent, and intermediary-free transactions, creating a dynamic ecosystem for Web3 creators and their audiences.
 
 ## Problem Statement
 
