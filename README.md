@@ -1,96 +1,25 @@
-# legacy-solcast
+# SolCast: Web3 Content Creation Platform on Solana
 
-## Getting Started
+## Overview
 
-### Prerequisites
+SolCast is a decentralized content creation platform built on the Solana blockchain, designed to empower creators in the Web3 content creation space. Drawing inspiration from Web2 platforms like YouTube and Twitch, ETHcast enables creators to tokenize their content as NFTs, fostering direct audience engagement and monetization through Solana's high-performance blockchain. Utilizing Anchor for smart contract development, ETHcast ensures secure, transparent, and intermediary-free transactions, creating a dynamic ecosystem for Web3 creators and their audiences.
 
-- Node v18.18.0 or higher
+## Problem Statement
 
-- Rust v1.77.2 or higher
-- Anchor CLI 0.30.1 or higher
-- Solana CLI 1.18.17 or higher
+Web2 content platforms rely on subscription-based models to drive creator-audience engagement. However, the Web3 content creation space lacks tailored platforms to replicate this engagement. ETHcast addresses this by providing a decentralized platform on Solana, allowing creators to tokenize content, engage directly with audiences, and monetize via Anchor-based smart contracts, leveraging Solana's low-cost, high-speed transactions for enhanced efficiency and scalability.
 
-### Installation
+## Features
 
-#### Clone the repo
+- Content Tokenization: Creators can mint their content as NFTs on Solana, enabling unique monetization opportunities.
+- Smart Contract Automation: Anchor-based programs on Solana automate secure payments and interactions between creators and audiences.
+- Decentralized Frontend: Built with Next.js for a responsive, scalable user interface.
+- Anchor Framework: Simplifies Solana program development and client-side interactions.
+- Web3 Wallet Integration: Seamless integration with Solana wallets (e.g., Phantom, Solflare) for user authentication and transactions.
 
-```shell
-git clone <repo-url>
-cd <repo-name>
-```
+## Technologies Used
 
-#### Install Dependencies
-
-```shell
-pnpm install
-```
-
-#### Start the web app
-
-```
-pnpm dev
-```
-
-## Apps
-
-### anchor
-
-This is a Solana program written in Rust using the Anchor framework.
-
-#### Commands
-
-You can use any normal anchor commands. Either move to the `anchor` directory and run the `anchor` command or prefix the
-command with `pnpm`, eg: `pnpm anchor`.
-
-#### Sync the program id:
-
-Running this command will create a new keypair in the `anchor/target/deploy` directory and save the address to the
-Anchor config file and update the `declare_id!` macro in the `./src/lib.rs` file of the program.
-
-You will manually need to update the constant in `anchor/lib/counter-exports.ts` to match the new program id.
-
-```shell
-pnpm anchor keys sync
-```
-
-#### Build the program:
-
-```shell
-pnpm anchor-build
-```
-
-#### Start the test validator with the program deployed:
-
-```shell
-pnpm anchor-localnet
-```
-
-#### Run the tests
-
-```shell
-pnpm anchor-test
-```
-
-#### Deploy to Devnet
-
-```shell
-pnpm anchor deploy --provider.cluster devnet
-```
-
-### web
-
-This is a React app that uses the Anchor generated client to interact with the Solana program.
-
-#### Commands
-
-Start the web app
-
-```shell
-pnpm dev
-```
-
-Build the web app
-
-```shell
-pnpm build
-```
+- Frontend: Next.js, React, Tailwind CSS
+- Blockchain: Solana, Rust (Anchor Programs)
+- Framework: Anchor (for program development and client-side integration)
+- Web3: @solana/web3.js, @project-serum/anchor
+- Development Tools: Node.js, Solana CLI, Rust
